@@ -32,7 +32,6 @@ class Burrows():
             else:
                 r[i] = s[-l-1]
         r = ''.join(r)
-
         return r
 
 def calc_first_occ(s):
@@ -56,7 +55,9 @@ def calc_first_occ(s):
         occ[c] = index
         index += A[c]
     del index, A
-
+    print("\nOCC Array")
+    print(occ)
+    print("\n")
     return occ
 
 
@@ -72,7 +73,6 @@ def calc_first_occ(s):
     print(occ)
     '''
 def main():
-    print("test")
     '''
     if not len(sys.argv) in [3]:
         print 'Usage: '
@@ -89,13 +89,11 @@ def main():
 
     # create index
     idx = index_build.index(data)
-
-    print("file loaded")
     c = idx.count(sys.argv[2])
     m = idx.search(sys.argv[2])
 
-    print(str(c))
-    print(str(m))
+    print("Number of matches found: %s \n" % str(c))
+    print("Index locations of matches: %s \n" % str(m))
 
 if __name__ == '__main__':
     main()
