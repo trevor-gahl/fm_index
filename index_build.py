@@ -1,8 +1,6 @@
 import pickle
 import fm_index
 
-
-
 bw  = fm_index.Burrows()
 
 
@@ -11,8 +9,8 @@ def save(filename, idx):
     pickle.dump(idx,f)
 
 def load(filename):
-    f = open(filename)
-    idx = pickle.load(f)
+    #f = open(filename)
+    idx = pickle.load(open(filename))
     return idx
 
 def index(data):
@@ -59,7 +57,7 @@ class fmIndex(object):
         # from arbitrary location
         r = 0
         i = idx
-        while self.data[i] != bw.EOS:
+        while self.data[i] != bw.delimiter:
             if self.offset.get(i):
                 # we have cached the location and can use it
                 r += self.offset[i]
