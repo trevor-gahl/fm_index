@@ -1,3 +1,14 @@
+'''
+**********************************************************************************
+***  CSCI-451 Fall 2017 Z-algorithm                                            ***
+***  Trevor Gahl, David Schwehr, Cas Loftin                                    ***
+***                                                                            ***
+***  Adapted and simplified from fmindex tutorial by                           ***
+***     https://github.com/egonelbre/fm-index                                  ***
+***                                                                            ***
+**********************************************************************************
+'''
+
 import os
 from os.path import join, abspath, isfile
 from os.path import isdir, exists, basename
