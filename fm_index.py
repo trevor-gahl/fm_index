@@ -1,34 +1,37 @@
-import pickle
+import os
+from os.path import join, abspath, isfile, isdir, exists, basename
+import time
+import sys
+import index_build
+import tarfile
 
-def transform(s):
-    delimiter = '#'
+class Burrows():
+    def transform(self, s):
+        delimiter = '#'
+        assert delimiter not in s, "Input string cannot contain null character (%s)" % self.EOS
 
-    """ Burrow-Wheeler transform with SuffixArray,
-        similar to SuffixTree implementations. """
-    assert delimiter not in s, "Input string cannot contain null character (%s)" % self.EOS
+        # add end of text marker
+        s += delimiter
 
-    # add end of text marker
-    s += delimiter
+        # table of suffixes
+        rotations = [ s[i:] for i in range(len(s))]
 
-    # table of suffixes
-    rotations = [ s[i:] for i in range(len(s))]
+        # sort the suffixes
+        rotations.sort()
 
-    # sort the suffixes
-    rotations.sort()
+        # get the length of ordered suffixes
+        k = len(rotations)
 
-    # get the length of ordered suffixes
-    k = len(rotations)
+        r = [0]*k
+        for i in xrange(k):
+            l = len(rotations[i])
+            if l == k:
+                r[i] = delimiter
+            else:
+                r[i] = s[-l-1]
+        r = ''.join(r)
 
-    r = [0]*k
-    for i in xrange(k):
-        l = len(rotations[i])
-        if l == k:
-            r[i] = delimiter
-        else:
-            r[i] = s[-l-1]
-    r = ''.join(r)
-
-    return r
+        return r
 
 def calc_first_occ(s):
     """ calculate the first occurance of a letter in sorted string s """
@@ -54,125 +57,39 @@ def calc_first_occ(s):
 
     return occ
 
-def save(filename, idx):
-    f = open(filename, 'w')
-    pickle.dump(idx,f)
 
-def load(filename):
-    f = open(filename)
-    idx = pickle.load(f)
-    return idx
 
-def index(data):
-    return fmIndex(data)
+    '''
+    test_string = 'accatgactttaggacctg'
 
-class fmIndex(object):
-    def __init__(self, data):
-        self.data = bw.transform(data)
-        self.offset = {}
-        self._build(data)
-    
-    def _build(self, data):
-        """ build the index """
-        self.occ = bwt.calc_first_occ(self.data)
+    output = Burrows.transform(test_string)
 
-    def _occ(self, qc):
-        """ get the first occurance of letter qc in left-column"""
-        c = self.occ.get(qc)
-        if c == None:
-            return 0
-        return c
+    occ = calc_first_occ(output)
 
-    def _count(self, idx, qc):
-        """ count the occurances of letter qc (rank of qc) upto position idx """
-        if not qc in self.occ.keys(): return 0
-        c = 0
-        for i in xrange(idx):
-            if self.data[i] == qc:
-                c += 1
-        return c
+    print(output)
+    print(occ)
+    '''
+def main():
+        print("test")
+        if not len(sys.argv) in [4]:
+            print 'Usage: '
+            print '  %s index search_string' % sys.argv[0]
+        else:
+            print("unable to load")
+            if not isfile(sys.argv[1]):
+                print "Index file doesn't exist"
 
-    def _lf(self, idx, qc):
-        """ get the nearset lf mapping for letter qc at position idx """
-        o = self._occ(qc)
-        c = self._count(idx, qc)
-        return o + c
+            idx = index_build.load(sys.argv[1])
 
-    def _walk(self, idx):
-        """ find the offset in position idx of transformed string
-            from the beginning """
+            print("file loaded")
+            c = idx.count(sys.argv[2])
 
-        # walk to the beginning using lf mapping
-        # this is same as inverse of burrow wheeler transformation
-        # from arbitrary location
-        r = 0
-        i = idx
-        while self.data[i] != bw.EOS:
-            if self.offset.get(i):
-                # we have cached the location and can use it
-                r += self.offset[i]
-                break
-            r += 1
-            i = self._lf(i, self.data[i])
 
-        # save the offset of some idx for faster searches
-        if not self.offset.get(idx):
-            self.offset[i] = r
-        return r
+            m = idx.search(sys.argv[2])
 
-    def bounds(self, q):
-        """ find the first and last suffix positions for query q """
-        top = 0
-        bot = len(self.data)
-        for i, qc in enumerate(q[::-1]):
-            top = self._lf(top, qc)
-            bot = self._lf(bot, qc)
-            if top == bot: return (-1,-1)
-        return (top,bot)
+            print(str(c))
 
-    def search(self, q):
-        """ search the positions of query q """
-
-        # find the suffixes for the query
-        top, bot = self.bounds(q)
-        matches = []
-        # find the location of the suffixes
-        # by walking the reverse text from that position
-        # with lf mapping
-        for i in range(top, bot):
-            pos = self._walk(i)
-            matches.append(pos)
-        return sorted(matches)
-
-    def count(self, q):
-        """ count occurances of q in the index """
-        top, bot = self.bounds(q)
-        return bot - top
-
-    def getOriginal(self):
-        return bwi.inverse(self.data)
-
-    def RLE(self):
-        output = []
-        last = ''
-        k = 0
-        for i in range(len(self.data)):
-            ch = self.data[i]
-            if ch == last:
-                k += 1
-            else:
-                if k > 0:
-                    output.append((last, k))
-                last = ch
-                k = 1
-        output.append((last, k))
-        return output
-
-test_string = 'accatgactttaggacctg'
-
-output = transform(test_string)
-
-occ = calc_first_occ(output)
-
-print(output)
-print(occ)
+            print(str(m))
+            fmindex.save(sys.argv[3], idx)
+if __name__ == '__main__':
+    main()
